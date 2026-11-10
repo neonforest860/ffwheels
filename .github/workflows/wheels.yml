@@ -1,0 +1,39 @@
+name: build-wheels
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  wheels:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download wheels (FaceFusion decc6c9 + onnxruntime-gpu + CUDA 12 runtime)
+        run: |
+          cat > req.txt <<'REQ'
+          gradio-rangeslider==0.0.8
+          gradio==5.50.0
+          numpy==2.5.4
+          onnx==1.23.2
+          onnxruntime==1.31.0
+          opencv-python-headless==5.0.0.93
+          tqdm==4.70.1
+          scipy==1.18.1
+          onnxruntime-gpu==1.24.4
+          nvidia-cuda-runtime-cu12
+          nvidia-cudnn-cu12==9.*
+          nvidia-cublas-cu12
+          nvidia-cufft-cu12
+          nvidia-curand-cu12
+          nvidia-cuda-nvrtc-cu12
+          REQ
+          python -m pip install -U pip
+          pip download -d wheels --only-binary=:all: -r req.txt
+          ls -lh wheels
+          du -sh wheels
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: wheels-py312
+          name: wheels-py312
+          files: wheels/*.whl
